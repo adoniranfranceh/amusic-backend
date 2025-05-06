@@ -5,14 +5,15 @@ class Api::V1::ApplicationController < ActionController::API
 
   def authorize_request
     token = request.headers["Authorization"]&.split(" ")&.last
-    decoded = JsonWebToken.decode(token:)
+    return render_unauthorized if token.nil?
 
-    if decoded.present?
-      @current_user = User.find_by(id: decoded[:user_id])
-      render_unauthorized unless @current_user
-    else
-      render_unauthorized
-    end
+    decoded = JsonWebToken.decode(token: token)
+    return render_unauthorized if decoded.nil?
+
+    @current_user = User.find_by(id: decoded[:user_id])
+    render render_unauthorized if @current_user.nil?
+  rescue JWT::DecodeError => e
+    render_unauthorized
   end
 
   def render_unauthorized
