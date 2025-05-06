@@ -1,63 +1,35 @@
 class Api::V1::Auth::SessionsController < Api::V1::ApplicationController
-  before_action :authorize_request, only: %i[ logout me ]
+  before_action :authorize_request, only: %i[logout me]
 
   def create
-    auth_params = params[:auth] || {}
+    result = Auth::Login.call(params[:auth])
 
-    if auth_params[:email].blank? || auth_params[:password].blank?
-      return render json: { error: "Email e senha são obrigatórios" }, status: :unprocessable_entity
+    if result[:success]
+      render json: result[:data], status: :ok
+    else
+      render json: { error: result[:error] }, status: :unauthorized
     end
-
-    user = User.find_by(email: login_params[:email])
-
-    if user&.authenticate(login_params[:password])
-      return generate_tokens_response(user:)
-    end
-
-    render json: { error: "Email ou senha inválidos" }, status: :unauthorized
   end
 
   def refresh
-    refresh_token = params[:refresh_token]
-    payload = JsonWebToken.decode(token: refresh_token)
+    result = Auth::Refresh.call(params[:refresh_token])
 
-    token_record = RefreshToken.find_by(jti: payload&.[](:jti), user_id: payload&.[](:user_id))
-
-    if token_record&.active?
-      token_record.update!(revoked: true)
-      return generate_tokens_response(user: token_record.user)
+    if result[:success]
+      render json: result[:data], status: :ok
+    else
+      render json: { error: result[:error] }, status: :unauthorized
     end
-
-    render json: { error: "Refresh token inválido ou expirado" }, status: :unauthorized
   end
 
   def logout
-    RefreshToken.where(user_id: current_user.id).update_all(revoked: true)
+    Auth::Logout.call(current_user)
     head :no_content
   end
 
   def me
     render json: {
-      id: @current_user.id,
-      email: @current_user.email,
+      id: current_user.id,
+      email: current_user.email
     }, status: :ok
-  end
-
-  private
-
-  def generate_tokens_response(user:)
-    access_token = JsonWebToken.encode(payload: { user_id: user.id })
-    refresh_token = create_refresh_token(user)
-    refresh_token_str = refresh_token.to_json
-
-    render json: { access_token:, refresh_token: refresh_token_str }, status: :ok
-  end
-
-  def create_refresh_token(user)
-    RefreshToken.create!(user:)
-  end
-
-  def login_params
-    params.require(:auth).permit(:email, :password)
   end
 end
