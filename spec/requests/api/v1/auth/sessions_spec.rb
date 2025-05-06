@@ -104,7 +104,7 @@ RSpec.describe 'Api::V1::Auth::SessionsController', type: :request do
   end
 
   describe 'DELETE /api/v1/auth/logout' do
-    let!(:refresh_token_record) { RefreshToken.create(user: user) }
+    let!(:refresh_token_record) { RefreshToken.create!(user: user) }
     let(:access_token) { JsonWebToken.encode(payload: { user_id: user.id }) }
 
     context 'with valid access token' do
