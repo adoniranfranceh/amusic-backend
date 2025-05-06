@@ -49,7 +49,7 @@ RSpec.describe 'Api::V1::Auth::SessionsController', type: :request do
       it 'returns bad request status and validation error message' do
         post '/api/v1/auth/login', params: {}.to_json, headers: headers
 
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unauthorized)
         json = JSON.parse(response.body)
         expect(json['error']).to eq('Email e senha são obrigatórios')
       end
