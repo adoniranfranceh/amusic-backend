@@ -1,7 +1,13 @@
 class Api::V1::Auth::SessionsController < Api::V1::ApplicationController
-  before_action :authorize_request, only: [ :logout ]
+  before_action :authorize_request, only: %i[ logout me ]
 
   def create
+    auth_params = params[:auth] || {}
+
+    if auth_params[:email].blank? || auth_params[:password].blank?
+      return render json: { error: "Email e senha são obrigatórios" }, status: :unprocessable_entity
+    end
+
     user = User.find_by(email: login_params[:email])
 
     if user&.authenticate(login_params[:password])
@@ -30,12 +36,21 @@ class Api::V1::Auth::SessionsController < Api::V1::ApplicationController
     head :no_content
   end
 
+  def me
+    render json: {
+      id: @current_user.id,
+      email: @current_user.email,
+    }, status: :ok
+  end
+
   private
 
   def generate_tokens_response(user:)
     access_token = JsonWebToken.encode(payload: { user_id: user.id })
     refresh_token = create_refresh_token(user)
-    render json: { access_token:, refresh_token: }, status: :ok
+    refresh_token_str = refresh_token.to_json
+
+    render json: { access_token:, refresh_token: refresh_token_str }, status: :ok
   end
 
   def create_refresh_token(user)

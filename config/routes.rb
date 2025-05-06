@@ -5,6 +5,7 @@ Rails.application.routes.draw do
         post "login", to: "sessions#create"
         delete "logout", to: "sessions#logout"
         post "refresh", to: "sessions#refresh"
+        get "me", to: "sessions#me"
       end
     end
   end
