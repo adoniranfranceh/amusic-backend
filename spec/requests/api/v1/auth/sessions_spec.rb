@@ -134,18 +134,18 @@ RSpec.describe 'Api::V1::Auth::SessionsController', type: :request do
 
   describe 'GET /api/v1/auth/me' do
     let(:access_token) { JsonWebToken.encode(payload: { user_id: user.id }) }
-  
+
     context 'with valid access token' do
       it 'returns current user data' do
         get '/api/v1/auth/me', headers: headers.merge('Authorization' => "Bearer #{access_token}")
-  
+
         expect(response).to have_http_status(:ok)
         json = JSON.parse(response.body)
         expect(json['email']).to eq(user.email)
         expect(json['id']).to eq(user.id)
       end
     end
-  
+
     context 'without token' do
       it 'returns unauthorized' do
         get '/api/v1/auth/me', headers: headers
