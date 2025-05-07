@@ -41,6 +41,12 @@ gem 'bcrypt'
 # https://github.com/jwt/ruby-jwt
 gem 'jwt'
 
+# Sidekiq - https://github.com/sidekiq/sidekiq
+gem 'sidekiq'
+
+# Sidekiq-cron - https://github.com/sidekiq-cron/sidekiq-cron
+gem 'sidekiq-cron'
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
